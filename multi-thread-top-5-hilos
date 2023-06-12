@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import threading
+from netmiko import ConnectHandler
+from concurrent.futures import ThreadPoolExecutor
+
+def obtener_configuracion(ip, username, password):
+    device = {
+        'device_type': 'cisco_ios',
+        'ip': ip,
+        'username': username,
+        'password': password,
+    }
+
+    try:
+        # Conectar al dispositivo
+        net_connect = ConnectHandler(**device)
+        print(f"Conectado a {ip}")
+
+        # Obtener la configuraci      n
+        output = net_connect.send_command('show running-config')
+
+        # Guardar la configuraci      n en un archivo
+        file_name = f"{ip}.txt"
+        with open(file_name, 'w') as file:
+            file.write(output)
+        print(f"Configuraci      n de {ip} guardada en {file_name}\n")
+
+        # Cerrar la conexi      n
+        net_connect.disconnect()
+        print(f"Desconectado de {ip}")
+    except Exception as e:
+        print(f"Error al conectar/desconectar de {ip}: {str(e)}\n")
+
+# Leer las direcciones IP de los equipos desde el archivo de texto
+with open('equipos.txt', 'r') as file:
+    lines = file.readlines()
+    equipos = [line.strip() for line in lines]
+
+# Solicitar credenciales al usuario
+username = input("Ingrese el nombre de usuario: ")
+password = input("Ingrese la contrase      a: ")
+
+# Crear un pool de subprocesos con un m      ximo de 2 hilos activos
+pool = ThreadPoolExecutor(max_workers=2)
+
+# Iniciar los hilos para obtener la configuraci      n de los equipos
+for equipo in equipos:
+    ip = equipo
+    pool.submit(obtener_configuracion, ip, username, password)
+
+# Esperar a que todos los hilos terminen
+pool.shutdown(wait=True)
+
