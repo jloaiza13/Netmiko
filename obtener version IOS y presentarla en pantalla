@@ -1,0 +1,27 @@
+from netmiko import ConnectHandler
+
+device = {
+    'device_type': 'cisco_ios',
+    'ip': '192.168.122.20',  # Reemplaza con la direcci      n IP del switch
+    'username': 'cisco',  # Reemplaza con el nombre de usuario
+    'password': 'cisco',  # Reemplaza con la contrase      a
+}
+
+try:
+    # Conectar al dispositivo
+    net_connect = ConnectHandler(**device)
+    print("Conectado al dispositivo.")
+
+    # Obtener la versi      n del sistema operativo (IOS)
+    output = net_connect.send_command('show version | include Cisco IOS Software')
+    version_line = output.splitlines()[0]
+    ios_version = version_line.split('Version ')[1]
+
+    # Imprimir la versi      n del IOS
+    print(f"La versi      n de IOS es: {ios_version}")
+
+    # Cerrar la conexi      n
+    net_connect.disconnect()
+    print("Conexi      n cerrada.")
+except Exception as e:
+    print(f"Error al conectar/desconectar del dispositivo: {str(e)}")
